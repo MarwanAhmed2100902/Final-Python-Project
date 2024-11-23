@@ -1,0 +1,211 @@
+import csv
+from validate_email_address import validate_email
+class Employee:
+    def __init__(self,ID,Name,Position,Salary,Email):
+        self.__ID = ID
+        self.__Name = Name
+        self.__Position = Position 
+        self.__Salary = Salary    
+        self.__Email = Email
+
+    def get_ID(self):
+        return self.__ID    
+
+    def get_Name(self):    
+        return self.__Name 
+    
+    def get_Position(self):   
+        return self.__Position 
+    
+    def get_Salary(self):  
+        return self.__Salary 
+    
+    def get_Email(self):        
+        return self.__Email 
+    
+    def set_ID(self,ID):
+        self.ID = ID
+
+    def set_Name(self,Name):
+        self.Name = Name
+
+    def set_Position(self,Position):
+        self.Position = Position
+
+    def set_Salary(self,Salary):
+        self.Salary = Salary
+
+    def set_Email(self,Email):
+        self.Email = Email
+
+    def to_dict(self):
+        return {
+            "ID": self.__ID,
+            "Name": self.__Name,
+            "Position": self.__Position,
+            "Salary": self.__Salary,
+            "Email": self.__Email
+        }    
+
+class EmployeeManager:
+    def __init__(self,filename):
+        self.filename = filename
+        self.employees = []
+       
+    def load_employees(self):
+        try:
+            with open(self.filename,mode="r") as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    emp = Employee(row["ID"],row["Name"],row["Position"],row["Salary"],row["Email"])
+                    self.employees.append(emp)
+        except FileNotFoundError:
+            with open(self.filename,mode="w") as file:
+                writer = csv.DictWriter(file,fieldnames=["ID","Name","Position","Salary","Email"])
+                writer.writeheader()
+        return self.employees
+    
+    def save(self):
+         with open(self.filename,mode="w") as file:
+                writer = csv.DictWriter(file,fieldnames=["ID","Name","Position","Salary","Email"])
+                writer.writeheader()
+                for emp in self.employees:
+                    writer.writerow(emp.to_dict())
+
+    def add_employee(self,employee):
+        self.employees.append(employee)
+        self.save()
+
+    def search_employee(self,ID):
+        for emp in self.employees:
+            if emp.get_ID() == ID:
+                return emp
+
+    def update_employee(self, ID, **any_field):
+        for emp in self.employees:
+            if emp.get_ID() == ID:
+                for key, value in any_field.items():
+                    if hasattr(emp,key.capitalize()):
+                        setattr(emp,key.capitalize(),value)
+        self.save()                
+
+    def delete_employee(self,ID):
+        new_employees = []
+        for emp in self.employees:
+            if emp.get_ID() != ID:
+                new_employees.append(emp)
+        self.employees = new_employees        
+        self.save()        
+
+    def print_employee(self,employee):
+        print(f"Name: {employee.get_Name()}\n"
+              f"ID: {employee.get_ID()}\n"
+              f"Position: {employee.get_Position()}\n"
+              f"Salary: {employee.get_Salary()}\n"
+              f"Email: {employee.get_Email()}\n")
+        
+    def list_employees(self):
+        for number, emp in enumerate(self.employees):
+            print(f"Employee {number + 1} details:\n")
+            self.print_employee(emp)
+              
+def main():
+    manager = EmployeeManager("employees.csv")
+    manager.load_employees()
+
+    print("\nEmployee Data Management System")
+    while True:
+        print("Please choose a number from 1 to 6 based on your request")
+        print("1. Add Employee")
+        print("2. List All Employees")
+        print("3. Search Employee")
+        print("4. Update Employee")
+        print("5. Delete Employee")
+        print("6. Exit")
+
+        choice = input("Enter your choice: ")
+        print()
+        if choice == "1":
+            while True:
+                try:
+                    ID = int(input("Enter ID: "))
+                    break
+                except ValueError:
+                    print("ID should be a number!! please try again")    
+            while True:
+                Name = input("Enter Name: ")
+                if not Name.replace(" ", "").isalpha():
+                    print("Invaild Name!! please try again")
+                else:
+                    break         
+            Position = input("Enter Position: ")
+            while True:
+                try:
+                    Salary = int(input("Enter Salary: "))
+                    break
+                except ValueError:
+                        print("Salary should be a number!! please try again")  
+            while True:
+                Email = input("Enter Email: ")
+                if not validate_email(Email):
+                    print("Invaild email!! please try again")
+                else:
+                    break      
+            employee = Employee(ID, Name, Position, Salary, Email)
+            manager.add_employee(employee)
+            print("\nNew employee added successfully\n")
+
+        elif choice == "2":
+            manager.list_employees()
+
+        elif choice == "3":
+            emp_id = input("Enter Employee ID to search: ")
+            emp = manager.search_employee(emp_id)
+            if emp:
+                manager.print_employee(emp)
+            else:
+                print("\nEmployee not found!")
+
+        elif choice == "4":
+            while True:
+                try:
+                    emp_id = int(input("Enter Employee ID to update: "))
+                    break
+                except ValueError:
+                    print("ID should be a number!! please try again")    
+            while True:
+                name = input("Enter new Name (leave blank to skip): ")
+                if not Name.replace(" ", "").isalpha():
+                    print("Invaild Name!! please try again")
+                else:
+                    break         
+            position = input("Enter new Position (leave blank to skip): ")
+            while True:
+                try:
+                    salary = int(input("Enter new Salary (leave blank to skip): "))
+                    break
+                except ValueError:
+                        print("Salary should be a number!! please try again")  
+            while True:
+                email = input("Enter new Email (leave blank to skip): ")
+                if not validate_email(Email):
+                    print("Invaild email!! please try again")
+                else:
+                    break   
+
+            manager.update_employee(emp_id, Name=name, Position=position, Salary=salary, Email=email)
+
+        elif choice == "5":
+            emp_id = input("Enter Employee ID to delete: ")
+            manager.delete_employee(emp_id)
+            print("\nEmployee deleted successfully\n")
+
+        elif choice == "6":
+            break
+
+        else:
+            print("Invalid choice! Please try again.")
+
+if __name__ == "__main__":
+    main()
+
